@@ -1,7 +1,7 @@
-use std::fs;
-use kmeans::{Contained, sequential, parallel};
+use std::{fs, env::{self, Args}};
+use kmeans::{Constructed, sequential, parallel};
 
-fn read_points_csv<T: Contained>(path: &str, mut container: Vec<T>) -> Vec<T> {
+fn read_points_csv<T: Constructed>(path: &str, container: &mut Vec<T>) {
     let contents = fs::read_to_string(path)
         .expect(&format!("A file to exist in the given path: {}", path));
 
@@ -28,16 +28,77 @@ fn read_points_csv<T: Contained>(path: &str, mut container: Vec<T>) -> Vec<T> {
 
         container.push(T::new(x, y));
     }
+}
 
-    container
+
+const DEFAULT_K: usize = 3;
+
+const DEFAULT_MAX_ITER: usize = 10000;
+
+enum ExecMode {
+    SEQ,
+    PAR
+}
+
+fn parse_usize_flag(flag_name: &str, default_value: usize, iter: &mut Args) -> usize {
+    match iter.next() {
+        Some(num_arg) => {
+            num_arg.parse::<usize>().unwrap_or_else(|_| {
+                eprintln!("Expected a numeric argument after `{flag_name}` flag, got: {}", num_arg);
+                default_value
+            })
+        },
+        None => {
+            eprintln!("Missing argument after `-k` flag, using default {flag_name}={default_value}");
+            default_value
+        }
+    }
 }
 
 fn main() {
-    let mut vs = Vec::new();
+    let mut args = env::args();
+    
+    let mut k = DEFAULT_K;
+    
+    let mut mode = ExecMode::PAR;
 
-    vs = read_points_csv("./xclara.csv", vs);
+    let mut max_iter: usize = DEFAULT_MAX_ITER;
 
-    parallel::kmeans(vs, 3);
+    args.next().expect("bin");
+
+    while let Some(arg) = args.next() { 
+        match arg.as_str() {
+            "-k" => {
+                k = parse_usize_flag("-k", DEFAULT_K, &mut args)
+            },
+            "-i" => {
+                max_iter = parse_usize_flag("-i", DEFAULT_MAX_ITER, &mut args)
+            },
+            "-p" => {
+                mode = ExecMode::PAR;
+            }
+            "-s" => {
+                mode = ExecMode::SEQ;
+            },
+            unkown_arg => {
+                eprintln!("Unkown argument provided: {unkown_arg}");
+                return;
+            }
+        }
+    }
+
+    match mode {
+        ExecMode::SEQ => {
+            let mut points = Vec::new();
+            read_points_csv("./xclara.csv", &mut points);
+            sequential::kmeans(points, k, max_iter);
+        },
+        ExecMode::PAR => {
+            let mut points = Vec::new();
+            read_points_csv("./xclara.csv", &mut points);
+            parallel::kmeans(points, k, max_iter);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -63,10 +124,6 @@ mod test {
 
         let point_vec = Vec::from(points);
 
-        sequential::kmeans(point_vec, 3);
-    }
-
-    #[test]
-    pub fn it_does_stuff_in_parallel() {
+        sequential::kmeans(point_vec, 3, 1);
     }
 }

@@ -1,4 +1,4 @@
-use crate::{Contained, MAX_ITER};
+use crate::{Constructed, print_clusters};
 use std::rc::Rc;
 use std::fmt::Debug;
 use rand::seq::SliceRandom;
@@ -10,7 +10,7 @@ pub struct Point {
     cluster: Option<Rc<Cluster>> 
 }
 
-impl Contained for Point {
+impl Constructed for Point {
     fn new(x: f64, y: f64) -> Self {
         Point { 
             x,
@@ -105,7 +105,7 @@ pub fn iteration(
 }
 
 
-pub fn kmeans(mut points: Vec<Point>, k: usize) {
+pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize) {
     let mut rng = rand::thread_rng();
 
     let mut iter_count = 0;
@@ -118,7 +118,7 @@ pub fn kmeans(mut points: Vec<Point>, k: usize) {
         );
     }
 
-    while iter_count < MAX_ITER {
+    while iter_count < max_iter {
         print!("\rcurrent iter: {iter_count}");
 
         (points, clusters) = iteration(points, clusters);
@@ -126,5 +126,5 @@ pub fn kmeans(mut points: Vec<Point>, k: usize) {
         iter_count += 1;
     }
 
-    println!("\n{:?}", clusters);
+    print_clusters!(clusters);
 }

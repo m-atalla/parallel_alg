@@ -1,9 +1,9 @@
-use std::sync::mpsc;
+use std::sync::mpsc::{Sender, Receiver, channel};
 use std::fmt::Debug;
 use rand::seq::SliceRandom;
-use std::thread;
 use std::sync::Arc;
-use crate::{MAX_ITER, Contained};
+use crate::{Constructed, print_clusters};
+use crate::threads::ThreadPool;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Point {
@@ -12,7 +12,7 @@ pub struct Point {
     cluster: Option<Arc<Cluster>> 
 }
 
-impl Contained for Point {
+impl Constructed for Point {
     fn new(x: f64, y: f64) -> Self {
         Point { 
             x,
@@ -35,7 +35,7 @@ pub struct Cluster {
 
 impl Debug for Cluster {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"center: ({},{})", self.centroid.x, self.centroid.y)
+        write!(f,"Centroid #{}: ({:6.2},{:6.2} )", self.idx,self.centroid.x, self.centroid.y)
     }
 }
 
@@ -71,32 +71,32 @@ pub fn update_points_clusters(mut points: Vec<Point>, clusters: Vec<Arc<Cluster>
 
 pub fn parallel_iteration(
         mut points: Vec<Point>,
-        clusters: Vec<Arc<Cluster>>
+        clusters: Vec<Arc<Cluster>>,
+        (tx, rx): &(Sender<Vec<Point>>, Receiver<Vec<Point>>),
+        pool: &ThreadPool
     ) -> (Vec<Point>, Vec<Arc<Cluster>>) {
 
 
     // sync channel to collect thread results
-    let (tx, rx) = mpsc::channel();
+    // let (tx, rx) = mpsc::channel();
 
-    for chunk in points.chunks(10) {
+    for chunk in points.chunks(250) {
         let chunk = chunk.to_owned();
         let t_clusters = clusters.clone();
         let chan = tx.clone();
-        thread::spawn(move || {
+
+        pool.execute(move || {
             let result = update_points_clusters(chunk, t_clusters);
             chan.send(result).unwrap();
         });
     }
 
-
     points.clear();
 
     // collecting thread output
-    for received in rx.recv() {
-        points.extend(received);
+    for _ in 0..pool.size() {
+        points.extend(rx.recv().unwrap());
     }
-
-
 
     // Copying to a new cluster container...
     let mut packed_new_clusters: Vec<(Cluster, f64)> = Vec::with_capacity(clusters.len());
@@ -130,7 +130,9 @@ pub fn parallel_iteration(
     (points, new_clusters)
 }
 
-pub fn kmeans(mut points: Vec<Point>, k: usize) {
+pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize) {
+    let pool = ThreadPool::new(12);
+
     let mut rng = rand::thread_rng();
 
     let mut iter_count = 0;
@@ -143,13 +145,20 @@ pub fn kmeans(mut points: Vec<Point>, k: usize) {
         );
     }
 
-    while iter_count < MAX_ITER {
-        print!("\rcurrent iter: {iter_count}");
+    let chan = channel();
 
-        (points, clusters) = parallel_iteration(points, clusters);
+    while iter_count < max_iter {
+        print!("\rCurrent iteration: {}", iter_count);
+
+        (points, clusters) = parallel_iteration(points, clusters, &chan, &pool);
 
         iter_count += 1;
     }
 
-    println!("\n{:?}", clusters);
+    print!("\rFinished {} iterations", iter_count);
+
+    print_clusters!(clusters);
 }
+
+
+
