@@ -34,7 +34,7 @@ pub struct Cluster {
 
 impl Debug for Cluster {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"center: ({},{})", self.centroid.x, self.centroid.y)
+        write!(f,"Centroid #{}: ({:6.2},{:6.2} )", self.idx,self.centroid.x, self.centroid.y)
     }
 }
 
@@ -119,12 +119,14 @@ pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize) {
     }
 
     while iter_count < max_iter {
-        print!("\rcurrent iter: {iter_count}");
+        print!("\rCurrent iter: {iter_count}");
 
         (points, clusters) = iteration(points, clusters);
 
         iter_count += 1;
     }
+
+    print!("\rFinished {} iterations", iter_count);
 
     print_clusters!(clusters);
 }
