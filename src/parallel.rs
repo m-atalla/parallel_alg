@@ -73,14 +73,13 @@ pub fn parallel_iteration(
         mut points: Vec<Point>,
         clusters: Vec<Arc<Cluster>>,
         (tx, rx): &(Sender<Vec<Point>>, Receiver<Vec<Point>>),
-        pool: &ThreadPool
+        pool: &ThreadPool,
+        n_threads: &usize
     ) -> (Vec<Point>, Vec<Arc<Cluster>>) {
 
+    let chunk_size = points.len() / n_threads;
 
-    // sync channel to collect thread results
-    // let (tx, rx) = mpsc::channel();
-
-    for chunk in points.chunks(250) {
+    for chunk in points.chunks(chunk_size) {
         let chunk = chunk.to_owned();
         let t_clusters = clusters.clone();
         let chan = tx.clone();
@@ -130,8 +129,8 @@ pub fn parallel_iteration(
     (points, new_clusters)
 }
 
-pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize) {
-    let pool = ThreadPool::new(12);
+pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize, n_threads: usize) {
+    let pool = ThreadPool::new(n_threads);
 
     let mut rng = rand::thread_rng();
 
@@ -150,7 +149,7 @@ pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize) {
     while iter_count < max_iter {
         print!("\rCurrent iteration: {}", iter_count);
 
-        (points, clusters) = parallel_iteration(points, clusters, &chan, &pool);
+        (points, clusters) = parallel_iteration(points, clusters, &chan, &pool, &n_threads);
 
         iter_count += 1;
     }
@@ -159,6 +158,3 @@ pub fn kmeans(mut points: Vec<Point>, k: usize, max_iter: usize) {
 
     print_clusters!(clusters);
 }
-
-
-

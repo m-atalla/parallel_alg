@@ -35,6 +35,8 @@ const DEFAULT_K: usize = 3;
 
 const DEFAULT_MAX_ITER: usize = 10000;
 
+const DEFAULT_N_THREADS: usize = 12;
+
 enum ExecMode {
     SEQ,
     PAR
@@ -64,6 +66,8 @@ fn main() {
 
     let mut max_iter: usize = DEFAULT_MAX_ITER;
 
+    let mut n_threads: usize = DEFAULT_N_THREADS;
+
     args.next().expect("bin");
 
     while let Some(arg) = args.next() { 
@@ -74,6 +78,9 @@ fn main() {
             "-i" => {
                 max_iter = parse_usize_flag("-i", DEFAULT_MAX_ITER, &mut args)
             },
+            "-t" => {
+                n_threads = parse_usize_flag("-t", DEFAULT_N_THREADS, &mut args)
+            }
             "-p" => {
                 mode = ExecMode::PAR;
             }
@@ -96,7 +103,7 @@ fn main() {
         ExecMode::PAR => {
             let mut points = Vec::new();
             read_points_csv("./xclara.csv", &mut points);
-            parallel::kmeans(points, k, max_iter);
+            parallel::kmeans(points, k, max_iter, n_threads);
         }
     }
 }
