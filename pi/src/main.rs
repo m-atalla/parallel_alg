@@ -1,8 +1,6 @@
 use std::ops::Range;
 use std::env;
-use std::sync::{Arc, Mutex};
-use util::{self, time_eval};
-
+use std::sync::mpsc;
 use rand::{self, distributions::Uniform, prelude::Distribution};
 use threads::ThreadPool;
 
@@ -23,31 +21,33 @@ fn estimate_pi_parallel(n_points: usize) {
     let mut chunk_ranges = Vec::with_capacity(pool.size());
 
     let mut current = 0;
+    
+    let (tx, rx) = mpsc::channel();
 
     for _ in 0..pool.size() {
         chunk_ranges.push(current..current+chunk_size);
         current += chunk_size;
     }
-
-    let in_count = Arc::new(Mutex::new(0));
-
+    
+    println!("Chunk ranges len: {}", chunk_ranges.len());
     for chunk_range in chunk_ranges {
-        let thread_result = Arc::clone(&in_count);
+        let thread_result = tx.clone();
         pool.execute(move || {
-            let mut count = thread_result.lock().unwrap(); 
-
-            *count += count_points_in_circle(chunk_range);
+            let in_count = count_points_in_circle(chunk_range);
+            thread_result.send(in_count).unwrap();
         });
     }
 
     
 
-    // gracefully drop thread pool inner threads...
-    // in other words, joins the inner threads.
-    drop(pool);
+    let mut in_count = 0usize; 
+
+    for _ in 0..pool.size() {
+        in_count += rx.recv().unwrap();
+    }
 
     // Accumelate thread results
-    let pi = pi_estinate(*in_count.lock().unwrap(), n_points);
+    let pi = pi_estinate(in_count, n_points);
 
     println!("PI = {pi}");
 }
