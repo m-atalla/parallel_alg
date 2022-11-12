@@ -1,0 +1,11 @@
+[package]
+name = "image_flip"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+threads = { path = "../threads" }
+util = { path = "../util" }
+rayon = "1.5.3"
+image = "0.24.4"
