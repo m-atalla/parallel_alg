@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use rand::seq::SliceRandom;
 use std::sync::Arc;
 use crate::{Constructed, print_clusters};
-use crate::threads::ThreadPool;
+use threads::ThreadPool;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Point {
