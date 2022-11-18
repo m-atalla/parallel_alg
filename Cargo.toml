@@ -4,5 +4,7 @@ members = [
     "kmeans",
     "image_flip",
     "pi",
-    "util"
+    "util",
+    "heat_eq",
+    "wave"
 ]
