@@ -8,6 +8,7 @@ pub struct ThreadPool {
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
+
 impl ThreadPool {
     pub fn new(size: usize) -> ThreadPool {
         let mut workers = Vec::with_capacity(size);
@@ -69,7 +70,9 @@ impl Worker {
                 let message = receiver.lock().unwrap().recv();
 
                 match message {
-                    Ok(job) => { job(); },
+                    Ok(job) => { 
+                        job(); 
+                    },
                     Err(_) => {
                         break;
                     }
