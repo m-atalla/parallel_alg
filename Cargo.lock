@@ -306,6 +306,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "matrix_mult"
+version = "0.1.0"
+
+[[package]]
 name = "memoffset"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
