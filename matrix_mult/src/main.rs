@@ -32,7 +32,7 @@ impl Mul for Matrix {
     type Output = Matrix;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut new_mat = Matrix::new(self.rows, self.cols, 0);
+        let mut new_mat = Matrix::new(self.rows, rhs.cols, 0);
         for i in 0..self.rows {
             for j in 0..self.cols {
                 for k in 0..self.rows {
