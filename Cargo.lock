@@ -308,6 +308,10 @@ dependencies = [
 [[package]]
 name = "matrix_mult"
 version = "0.1.0"
+dependencies = [
+ "threads",
+ "util",
+]
 
 [[package]]
 name = "memoffset"
