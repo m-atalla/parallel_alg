@@ -7,5 +7,6 @@ members = [
     "util",
     "heat_eq",
     "wave",
-    "matrix_mult"
+    "matrix_mult",
+    "parsers"
 ]
