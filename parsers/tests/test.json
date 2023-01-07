@@ -1,0 +1,23 @@
+{
+    "menu": {
+        "id": "file",
+        "value": "File",
+        "menuitem": [
+            {
+                "value": "New",
+                "onclick": "CreateNewDoc()",
+                "amount": 10
+            },
+            {
+                "value": "Open",
+                "onclick": "open_doc",
+                "amount": 10.05
+            },
+            {
+                "value": "Close",
+                "onclick": "close-doc",
+                "amount": -10
+            }
+        ]
+    }
+}
