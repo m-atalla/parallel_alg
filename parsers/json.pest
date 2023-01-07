@@ -1,0 +1,39 @@
+char = @{ 
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+inner_str = @{ char* }
+string = {"\"" ~ inner_str ~ "\""}
+
+null = { "null" }
+boolean = { "true" | "false" }
+
+number = @{ 
+    "-"? 
+    ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*)
+    ~ ("." ~ ASCII_DIGIT*)?
+}
+
+array = { "[" ~ "]" | "[" ~ value ~ ("," ~ value)* ~ "]" }
+object = { "{" ~ "}" | "{" ~ pair ~ ("," ~ pair)* ~ "}" }
+
+value = _{ 
+    boolean | 
+    null |
+    array |
+    object |
+    string | 
+    number
+}
+
+pair = { string ~ ":" ~ value }
+
+WHITESPACE= _{ " " | "\t" | "\r" | "\n" }
+
+json = _{ 
+    SOI ~
+    ( object | array ) ~
+    EOI
+}
