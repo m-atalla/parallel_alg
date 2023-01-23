@@ -8,5 +8,7 @@ members = [
     "heat_eq",
     "wave",
     "matrix_mult",
-    "parsers"
+    "parsers",
+    "efsm",
+    "ascii_hist"
 ]
